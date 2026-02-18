@@ -87,6 +87,80 @@
 
     <script>
         const gallery = document.getElementById('gallery');
+
+        let isGenerating = false;
+const COOLDOWN_MS = 10000; // 10 секунд
+let lastGeneratedTime = 0;
+
+async function generateImage() {
+    const now = Date.now();
+    if (isGenerating) return;
+    if (now - lastGeneratedTime < COOLDOWN_MS) {
+        const secLeft = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
+        alert(`Подожди ещё ${secLeft} сек — серверу нужно отдохнуть 😅`);
+        return;
+    }
+
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) {
+        alert('Напиши, что хочешь увидеть!');
+        return;
+    }
+    if (/[а-яА-ЯёЁ]{4,}/.test(prompt)) {
+        if (!confirm('Промпт на русском — результат может быть странным. Продолжить?')) {
+            return;
+        }
+    }
+
+    isGenerating = true;
+    lastGeneratedTime = now;
+
+    const btn = document.getElementById('genBtn');
+    const img = document.getElementById('resultImage');
+    const loader = document.getElementById('loader');
+
+    btn.disabled = true;
+    btn.innerText = 'Генерирую...';
+    loader.style.display = 'block';
+    img.style.opacity = '0.5';
+
+    const seed = Math.floor(Math.random() * 999999);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true`;
+
+    const tempImg = new Image();
+    tempImg.src = imageUrl;
+
+    // Таймаут на случай зависания
+    const timeout = setTimeout(() => {
+        if (isGenerating) {
+            alert('Генерация заняла слишком много времени. Попробуй ещё раз.');
+            finishLoading();
+        }
+    }, 30000);
+
+    tempImg.onload = () => {
+        clearTimeout(timeout);
+        if (img.src && !img.src.includes('unsplash')) {
+            addToGallery(img.src);
+        }
+        img.src = imageUrl;
+        img.style.opacity = '1';
+        finishLoading();
+    };
+
+    tempImg.onerror = () => {
+        clearTimeout(timeout);
+        alert('Не получилось загрузить картинку. Попробуй другой промпт.');
+        finishLoading();
+    };
+
+    function finishLoading() {
+        loader.style.display = 'none';
+        btn.disabled = false;
+        btn.innerText = 'Создать изображение';
+        isGenerating = false;
+    }
+}
         
         async function generateImage() {
             const promptInput = document.getElementById('promptInput');
