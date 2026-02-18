@@ -38,7 +38,6 @@
     </style>
 </head>
 <body class="p-4 md:p-10">
-
     <div class="max-w-4xl mx-auto">
         <div class="glass p-6 md:p-10 shadow-2xl mb-8">
             <header class="text-center mb-8">
@@ -47,20 +46,18 @@
                 </h1>
                 <p class="text-slate-400 text-sm mt-2 font-light">Бесплатная генерация шедевров 24/7</p>
             </header>
-
             <div class="flex flex-col gap-4">
-                <input type="text" id="promptInput" 
-                    placeholder="Опишите что нарисовать (на английском)..." 
+                <input type="text" id="promptInput"
+                    placeholder="Опишите что нарисовать (на английском лучше)..."
                     class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                
+               
                 <button onclick="generateImage()" id="genBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 p-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg">
                     Создать изображение
                 </button>
             </div>
-
             <div class="mt-10 flex flex-col items-center">
                 <div id="loader" class="loader mb-4"></div>
-                <img id="resultImage" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000" 
+                <img id="resultImage" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000"
                     class="rounded-2xl shadow-2xl max-h-[500px] w-full object-cover neon-border">
             </div>
         </div>
@@ -76,149 +73,139 @@
             <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Ваша галерея
             </h3>
-            <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                </div>
+            <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
 
         <footer class="mt-10 text-center text-slate-500 text-xs">
-            <p>&copy; 2026 AI Dream Art Studio. Все права защищены.</p>
+            <p>© 2026 AI Dream Art Studio. Все права защищены.</p>
         </footer>
     </div>
 
     <script>
-    const gallery = document.getElementById('gallery');
-    const MAX_GALLERY = 8;
-    const COOLDOWN_MS = 10000; // 10 секунд
+        const gallery = document.getElementById('gallery');
+        const MAX_GALLERY = 8;
+        const COOLDOWN_MS = 12000; // 12 секунд — чуть мягче, чтобы не словить бан
 
-    let isGenerating = false;
-    let lastGeneratedTime = 0;
+        let isGenerating = false;
+        let lastGeneratedTime = 0;
 
-    // ───────────────────────────────────────────────
-    // Загрузка галереи из localStorage при старте
-    // ───────────────────────────────────────────────
-    function loadGallery() {
-        const saved = localStorage.getItem('aiDreamArtGallery');
-        if (saved) {
-            const urls = JSON.parse(saved);
-            gallery.innerHTML = ''; // очищаем на всякий случай
-            urls.forEach(url => addToGallery(url, false)); // false = не сохранять заново
-        }
-    }
-
-    // ───────────────────────────────────────────────
-    // Добавление в галерею + сохранение в localStorage
-    // ───────────────────────────────────────────────
-    function addToGallery(url, save = true) {
-        const div = document.createElement('div');
-        div.className = 'gallery-item';
-        div.innerHTML = `
-            <img src="${url}" 
-                 class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
-                 onclick="window.open('${url}', '_blank')">
-        `;
-        gallery.prepend(div);
-
-        // Удаляем лишние элементы
-        while (gallery.children.length > MAX_GALLERY) {
-            gallery.lastChild.remove();
+        function loadGallery() {
+            const saved = localStorage.getItem('aiDreamArtGallery');
+            if (saved) {
+                const urls = JSON.parse(saved);
+                gallery.innerHTML = '';
+                urls.forEach(url => addToGallery(url, false));
+            }
         }
 
-        if (save) {
-            saveGallery();
-        }
-    }
+        function addToGallery(url, save = true) {
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${url}"
+                     class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
+                     onclick="window.open('${url}', '_blank')">
+            `;
+            gallery.prepend(div);
 
-    function saveGallery() {
-        const urls = Array.from(gallery.querySelectorAll('img')).map(img => img.src);
-        localStorage.setItem('aiDreamArtGallery', JSON.stringify(urls));
-    }
+            while (gallery.children.length > MAX_GALLERY) {
+                gallery.lastChild.remove();
+            }
 
-    // ───────────────────────────────────────────────
-    // Основная функция генерации
-    // ───────────────────────────────────────────────
-    async function generateImage() {
-        const now = Date.now();
-
-        if (isGenerating) return;
-
-        if (now - lastGeneratedTime < COOLDOWN_MS) {
-            const secLeft = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
-            alert(`Подожди ещё ${secLeft} сек — серверу нужно немного отдохнуть 🌙`);
-            return;
+            if (save) saveGallery();
         }
 
-        const promptInput = document.getElementById('promptInput');
-        const prompt = promptInput.value.trim();
-
-        if (!prompt) {
-            alert('Напиши, что хочешь увидеть!');
-            return;
+        function saveGallery() {
+            const urls = Array.from(gallery.querySelectorAll('img')).map(img => img.src);
+            localStorage.setItem('aiDreamArtGallery', JSON.stringify(urls));
         }
 
-        // Лёгкая подсказка про русский язык
-        if (/[а-яА-ЯёЁ]{3,}/.test(prompt)) {
-            if (!confirm('Промпт содержит русский текст — результат может быть хуже. Продолжить?')) {
+        async function generateImage() {
+            const now = Date.now();
+            if (isGenerating) return;
+            if (now - lastGeneratedTime < COOLDOWN_MS) {
+                const secLeft = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
+                alert(`Подожди ещё ${secLeft} сек — серверу нужно отдохнуть 🌙`);
                 return;
             }
-        }
 
-        isGenerating = true;
-        lastGeneratedTime = now;
-
-        const btn = document.getElementById('genBtn');
-        const img = document.getElementById('resultImage');
-        const loader = document.getElementById('loader');
-
-        btn.disabled = true;
-        btn.innerText = 'Генерирую шедевр...';
-        loader.style.display = 'block';
-        img.style.opacity = '0.5';
-
-        const seed = Math.floor(Math.random() * 999999);
-        const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true&model=flux`;
-        
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
-
-        // Защита от вечного ожидания
-        const timeoutId = setTimeout(() => {
-            if (isGenerating) {
-                alert('Генерация слишком долго идёт. Попробуй ещё раз или другой промпт.');
-                finish();
-            }
-        }, 30000);
-
-        tempImg.onload = () => {
-            clearTimeout(timeoutId);
-
-            // Добавляем предыдущую картинку в галерею (если это не заглушка)
-            if (img.src && !img.src.includes('unsplash')) {
-                addToGallery(img.src);
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                alert('Напиши, что хочешь увидеть!');
+                return;
             }
 
-            img.src = imageUrl;
-            img.style.opacity = '1';
-            finish();
-        };
+            if (/[а-яА-ЯёЁ]{3,}/.test(prompt)) {
+                if (!confirm('Промпт на русском — результат может быть хуже. Продолжить?')) return;
+            }
 
-        tempImg.onerror = () => {
-            clearTimeout(timeoutId);
-            alert('Не удалось загрузить изображение. Попробуй другой промпт.');
-            finish();
-        };
+            isGenerating = true;
+            lastGeneratedTime = now;
 
-        function finish() {
-            loader.style.display = 'none';
-            btn.disabled = false;
-            btn.innerText = 'Создать изображение';
-            isGenerating = false;
+            const btn = document.getElementById('genBtn');
+            const img = document.getElementById('resultImage');
+            const loader = document.getElementById('loader');
+
+            btn.disabled = true;
+            btn.innerText = 'Генерирую шедевр...';
+            loader.style.display = 'block';
+            img.style.opacity = '0.5';
+
+            const seed = Math.floor(Math.random() * 999999999);
+
+            // Самый стабильный анонимный вариант на февраль 2026 — turbo
+            const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true&model=turbo`;
+
+            // Если хочешь попробовать Flux (иногда работает, иногда требует ключ)
+            // const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true&model=flux`;
+
+            // Таймаут на случай зависания
+            const timeoutId = setTimeout(() => {
+                if (isGenerating) {
+                    alert('Генерация слишком долго идёт. Попробуй другой промпт или подожди.');
+                    finish();
+                }
+            }, 40000);
+
+            try {
+                const response = await fetch(imageUrl, { mode: 'cors' });
+                if (!response.ok) {
+                    throw new Error(`Сервер ответил ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+
+                if (img.src && !img.src.includes('unsplash')) {
+                    addToGallery(img.src);
+                }
+
+                img.src = objectUrl;
+                img.style.opacity = '1';
+
+            } catch (err) {
+                console.error(err);
+                alert(`Не удалось сгенерировать: ${err.message}\nПопробуй промпт проще или подожди 1–2 минуты.`);
+            } finally {
+                clearTimeout(timeoutId);
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = 'Создать изображение';
+                isGenerating = false;
+            }
+
+            function finish() {
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = 'Создать изображение';
+                isGenerating = false;
+            }
         }
-    }
 
-    // Инициализация при загрузке страницы
-    window.addEventListener('load', () => {
-        loadGallery();
-    });
-</script>
+        window.addEventListener('load', () => {
+            loadGallery();
+        });
+    </script>
 </body>
 </html>
