@@ -52,12 +52,29 @@
                     placeholder="Опишите что нарисовать (на английском лучше)..."
                     class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
 
-                <div class="flex gap-3">
-                    <input type="text" id="apiKeyInput" placeholder="Введи API ключ (pk_... или sk_...)" 
-                        class="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                    <button onclick="saveApiKey()" class="bg-green-600 hover:bg-green-500 px-6 py-4 rounded-xl font-bold transition-all">
-                        Сохранить ключ
-                    </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">Модель ИИ</label>
+                        <select id="modelSelect" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <option value="flux">Flux (высокое качество, default)</option>
+                            <option value="turbo">Turbo (быстрее, экономнее)</option>
+                            <option value="zimage">Z-Image Turbo</option>
+                            <option value="klein">Klein (FLUX.2 компактный)</option>
+                            <option value="seedream">Seedream</option>
+                            <option value="nanobanana">NanoBanana (лёгкая)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-slate-300 mb-1">API-ключ (pk_... или sk_...)</label>
+                        <div class="flex gap-3">
+                            <input type="text" id="apiKeyInput" placeholder="Введи ключ от enter.pollinations.ai"
+                                class="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <button onclick="saveApiKey()" class="bg-green-600 hover:bg-green-500 px-6 py-4 rounded-xl font-bold transition-all">
+                                Сохранить
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <button onclick="generateImage()" id="genBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 p-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg">
@@ -88,19 +105,19 @@
 
         <footer class="mt-10 text-center text-slate-500 text-xs">
             <p>© 2026 AI Dream Art Studio. Все права защищены.</p>
-            <p class="mt-1">Работает на Pollinations.ai (бесплатный ключ на enter.pollinations.ai)</p>
+            <p class="mt-1">Работает на Pollinations.ai (бесплатный ключ на <a href="https://enter.pollinations.ai" target="_blank" class="text-blue-400 hover:underline">enter.pollinations.ai</a>)</p>
         </footer>
     </div>
 
     <script>
         const gallery = document.getElementById('gallery');
         const MAX_GALLERY = 8;
-        const COOLDOWN_MS = 15000; // 15 сек — безопаснее с ключом
+        const COOLDOWN_MS = 15000; // 15 сек
 
         let isGenerating = false;
         let lastGeneratedTime = 0;
 
-        // Загрузка ключа и галереи
+        // Загрузка ключа и галереи при старте
         function loadApiKey() {
             return localStorage.getItem('pollinationsApiKey') || '';
         }
@@ -110,7 +127,7 @@
             const key = keyInput.value.trim();
             if (key) {
                 localStorage.setItem('pollinationsApiKey', key);
-                alert('Ключ сохранён! Теперь можно генерировать.');
+                alert('Ключ сохранён! Можно генерировать.');
             } else {
                 alert('Введи ключ (pk_... или sk_...)');
             }
@@ -126,14 +143,14 @@
         }
 
         function addToGallery(url, save = true) {
-            const div = document.getElementById('gallery');
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.innerHTML = `
-                <img src="${url}" class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${url}"
+                     class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
                      onclick="window.open('${url}', '_blank')">
             `;
-            gallery.prepend(item);
+            gallery.prepend(div);
 
             while (gallery.children.length > MAX_GALLERY) {
                 gallery.lastChild.remove();
@@ -152,7 +169,7 @@
             if (isGenerating) return;
             if (now - lastGeneratedTime < COOLDOWN_MS) {
                 const sec = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
-                alert(`Подожди ещё ${sec} сек`);
+                alert(`Подожди ещё ${sec} сек — серверу нужно отдохнуть 🌙`);
                 return;
             }
 
@@ -164,76 +181,10 @@
 
             const apiKey = loadApiKey();
             if (!apiKey) {
-                if (confirm('Нужен API-ключ от https://enter.pollinations.ai (бесплатно). Открыть сайт?')) {
+                if (confirm('Нужен бесплатный API-ключ с https://enter.pollinations.ai. Открыть сайт?')) {
                     window.open('https://enter.pollinations.ai', '_blank');
                 }
                 return;
             }
 
-            isGenerating = true;
-            lastGeneratedTime = now;
-
-            const btn = document.getElementById('genBtn');
-            const img = document.getElementById('resultImage');
-            const loader = document.getElementById('loader');
-
-            btn.disabled = true;
-            btn.innerText = 'Генерирую...';
-            loader.style.display = 'block';
-            img.style.opacity = '0.5';
-
-            const seed = Math.floor(Math.random() * 999999999);
-            const model = 'flux'; // или 'turbo' для быстрее/дешевле
-
-            const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=${model}&width=1080&height=1080&seed=${seed}&nologo=true&enhance=false`;
-
-            const timeoutId = setTimeout(() => {
-                if (isGenerating) {
-                    alert('Слишком долго... Попробуй позже.');
-                    finish();
-                }
-            }, 60000);
-
-            try {
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Ошибка ${response.status}: ${errText || 'проверь ключ / кредиты'}`);
-                }
-
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
-
-                if (img.src && !img.src.includes('unsplash')) {
-                    addToGallery(img.src);
-                }
-
-                img.src = objectUrl;
-                img.style.opacity = '1';
-
-            } catch (err) {
-                console.error(err);
-                alert(`Ошибка: ${err.message}\nВозможно кончились кредиты или неверный ключ.`);
-            } finally {
-                clearTimeout(timeoutId);
-                finish();
-            }
-
-            function finish() {
-                loader.style.display = 'none';
-                btn.disabled = false;
-                btn.innerText = 'Создать изображение';
-                isGenerating = false;
-            }
-        }
-
-        window.addEventListener('load', () => {
-            loadGallery();
-            document.getElementById('apiKeyInput').value = loadApiKey();
-        });
-    </script>
-</body>
-</html>
+            const model = document.get
