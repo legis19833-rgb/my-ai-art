@@ -6,34 +6,12 @@
     <title>AI Dream Art — Твоя ИИ Студия</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background: radial-gradient(circle at top, #0f172a, #1e293b, #000000);
-            min-height: 100vh;
-            color: white;
-            font-family: 'Inter', sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-        }
-        .neon-border {
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
-        }
-        .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #38bdf8;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
+        body { background: radial-gradient(circle at top, #0f172a, #1e293b, #000000); min-height: 100vh; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
+        .neon-border { box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #38bdf8; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .gallery-item {
-            transition: transform 0.3s ease;
-        }
+        .gallery-item { transition: transform 0.3s ease; }
         .gallery-item:hover { transform: scale(1.05); }
     </style>
 </head>
@@ -41,150 +19,155 @@
     <div class="max-w-4xl mx-auto">
         <div class="glass p-6 md:p-10 shadow-2xl mb-8">
             <header class="text-center mb-8">
-                <h1 class="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-                    AI DREAM ART
-                </h1>
-                <p class="text-slate-400 text-sm mt-2 font-light">Бесплатная генерация шедевров 24/7 (нужен ключ от Pollinations)</p>
+                <h1 class="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">AI DREAM ART</h1>
+                <p class="text-slate-400 text-sm mt-2 font-light">Генерация на Pollinations.ai (нужен ключ plln_sk_...)</p>
             </header>
 
             <div class="flex flex-col gap-4 mb-6">
-                <input type="text" id="promptInput"
-                    placeholder="Опишите что нарисовать (на английском лучше)..."
-                    class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                <input type="text" id="promptInput" placeholder="Describe what to draw (English best)..." class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm text-slate-300 mb-1">Модель ИИ</label>
+                        <label class="block text-sm text-slate-300 mb-1">Модель</label>
                         <select id="modelSelect" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                            <option value="flux">Flux (высокое качество, default)</option>
-                            <option value="turbo">Turbo (быстрее, экономнее)</option>
-                            <option value="zimage">Z-Image Turbo</option>
-                            <option value="klein">Klein (FLUX.2 компактный)</option>
+                            <option value="flux">Flux (лучшее качество)</option>
+                            <option value="turbo">Turbo (быстрее и дешевле)</option>
+                            <option value="klein">Klein (компактный Flux)</option>
+                            <option value="zimage">Z-Image</option>
                             <option value="seedream">Seedream</option>
-                            <option value="nanobanana">NanoBanana (лёгкая)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm text-slate-300 mb-1">API-ключ (pk_... или sk_...)</label>
+                        <label class="block text-sm text-slate-300 mb-1">API-ключ (plln_sk_... или sk_...)</label>
                         <div class="flex gap-3">
-                            <input type="text" id="apiKeyInput" placeholder="Введи ключ от enter.pollinations.ai"
-                                class="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                            <button onclick="saveApiKey()" class="bg-green-600 hover:bg-green-500 px-6 py-4 rounded-xl font-bold transition-all">
-                                Сохранить
-                            </button>
+                            <input type="text" id="apiKeyInput" placeholder="Введи ключ из enter.pollinations.ai" class="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <button onclick="saveApiKey()" class="bg-green-600 hover:bg-green-500 px-6 py-4 rounded-xl font-bold transition-all">Сохранить</button>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="generateImage()" id="genBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 p-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg">
-                    Создать изображение
-                </button>
+                <button onclick="generateImage()" id="genBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 p-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg">Создать</button>
             </div>
 
             <div class="mt-10 flex flex-col items-center">
                 <div id="loader" class="loader mb-4"></div>
-                <img id="resultImage" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000"
-                    class="rounded-2xl shadow-2xl max-h-[500px] w-full object-cover neon-border">
-            </div>
-        </div>
-
-        <div class="glass p-4 mb-8 text-center border-dashed border-blue-500/30">
-            <p class="text-xs text-slate-500 mb-2 uppercase tracking-widest">Sponsored Content</p>
-            <div id="ad-space">
-                <p class="text-blue-300/40 text-sm">Место для твоего рекламного баннера</p>
+                <img id="resultImage" src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000" class="rounded-2xl shadow-2xl max-h-[500px] w-full object-cover neon-border">
             </div>
         </div>
 
         <div class="glass p-6">
-            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Ваша галерея
-            </h3>
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Галерея</h3>
             <div id="gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
 
         <footer class="mt-10 text-center text-slate-500 text-xs">
-            <p>© 2026 AI Dream Art Studio. Все права защищены.</p>
-            <p class="mt-1">Работает на Pollinations.ai (бесплатный ключ на <a href="https://enter.pollinations.ai" target="_blank" class="text-blue-400 hover:underline">enter.pollinations.ai</a>)</p>
+            <p>© 2026 AI Dream Art. Ключ бесплатно на <a href="https://enter.pollinations.ai" target="_blank" class="text-blue-400 hover:underline">enter.pollinations.ai</a></p>
         </footer>
     </div>
 
     <script>
         const gallery = document.getElementById('gallery');
         const MAX_GALLERY = 8;
-        const COOLDOWN_MS = 15000; // 15 сек
+        const COOLDOWN_MS = 15000;
 
         let isGenerating = false;
         let lastGeneratedTime = 0;
 
-        // Загрузка ключа и галереи при старте
-        function loadApiKey() {
-            return localStorage.getItem('pollinationsApiKey') || '';
-        }
+        function loadApiKey() { return localStorage.getItem('pollinationsApiKey') || ''; }
 
         function saveApiKey() {
-            const keyInput = document.getElementById('apiKeyInput');
-            const key = keyInput.value.trim();
-            if (key) {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key && (key.startsWith('plln_sk_') || key.startsWith('sk_') || key.startsWith('plln_pk_'))) {
                 localStorage.setItem('pollinationsApiKey', key);
-                alert('Ключ сохранён! Можно генерировать.');
+                alert('Ключ сохранён! (проверь формат: plln_sk_... или sk_...)');
             } else {
-                alert('Введи ключ (pk_... или sk_...)');
+                alert('Ключ должен начинаться с plln_sk_ или sk_ (или plln_pk_ для теста). Получи на enter.pollinations.ai');
             }
         }
 
         function loadGallery() {
             const saved = localStorage.getItem('aiDreamArtGallery');
             if (saved) {
-                const urls = JSON.parse(saved);
-                gallery.innerHTML = '';
-                urls.forEach(url => addToGallery(url, false));
+                JSON.parse(saved).forEach(url => addToGallery(url, false));
             }
         }
 
         function addToGallery(url, save = true) {
             const div = document.createElement('div');
             div.className = 'gallery-item';
-            div.innerHTML = `
-                <img src="${url}"
-                     class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
-                     onclick="window.open('${url}', '_blank')">
-            `;
+            div.innerHTML = `<img src="${url}" class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 w-full aspect-square object-cover" onclick="window.open('${url}', '_blank')">`;
             gallery.prepend(div);
-
-            while (gallery.children.length > MAX_GALLERY) {
-                gallery.lastChild.remove();
-            }
-
-            if (save) saveGallery();
-        }
-
-        function saveGallery() {
-            const urls = Array.from(gallery.querySelectorAll('img')).map(img => img.src);
-            localStorage.setItem('aiDreamArtGallery', JSON.stringify(urls));
+            while (gallery.children.length > MAX_GALLERY) gallery.lastChild.remove();
+            if (save) localStorage.setItem('aiDreamArtGallery', JSON.stringify(Array.from(gallery.querySelectorAll('img')).map(i => i.src)));
         }
 
         async function generateImage() {
-            const now = Date.now();
             if (isGenerating) return;
+            const now = Date.now();
             if (now - lastGeneratedTime < COOLDOWN_MS) {
-                const sec = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
-                alert(`Подожди ещё ${sec} сек — серверу нужно отдохнуть 🌙`);
+                alert(`Подожди ещё ${Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime))/1000)} сек`);
                 return;
             }
 
             const prompt = document.getElementById('promptInput').value.trim();
-            if (!prompt) {
-                alert('Введи описание!');
-                return;
-            }
+            if (!prompt) return alert('Введи промпт!');
 
             const apiKey = loadApiKey();
             if (!apiKey) {
-                if (confirm('Нужен бесплатный API-ключ с https://enter.pollinations.ai. Открыть сайт?')) {
-                    window.open('https://enter.pollinations.ai', '_blank');
-                }
+                if (confirm('Нужен ключ (plln_sk_...) с https://enter.pollinations.ai. Открыть?')) window.open('https://enter.pollinations.ai', '_blank');
                 return;
             }
 
-            const model = document.get
+            isGenerating = true;
+            lastGeneratedTime = now;
+
+            const btn = document.getElementById('genBtn');
+            const imgEl = document.getElementById('resultImage');
+            const loader = document.getElementById('loader');
+
+            btn.disabled = true;
+            btn.innerText = 'Генерирую...';
+            loader.style.display = 'block';
+            imgEl.style.opacity = '0.5';
+
+            const model = document.getElementById('modelSelect').value;
+            const seed = Math.floor(Math.random() * 999999999);
+            const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=${model}&width=1080&height=1080&seed=${seed}&nologo=true`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+
+                if (!res.ok) {
+                    let errMsg = await res.text().catch(() => '');
+                    if (res.status === 401 || res.status === 403) errMsg = 'Неверный / просроченный ключ. Проверь plln_sk_...';
+                    throw new Error(`Ошибка ${res.status}: ${errMsg}`);
+                }
+
+                const blob = await res.blob();
+                const objUrl = URL.createObjectURL(blob);
+
+                if (imgEl.src && !imgEl.src.includes('unsplash')) addToGallery(imgEl.src);
+                imgEl.src = objUrl;
+                imgEl.style.opacity = '1';
+
+            } catch (err) {
+                console.error(err);
+                alert(`Ошибка генерации: ${err.message}\n(401/403 = плохой ключ, 402 = нет Pollen кредитов)`);
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = 'Создать';
+                isGenerating = false;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            loadGallery();
+            document.getElementById('apiKeyInput').value = loadApiKey();
+        });
+    </script>
+</body>
+</html>
