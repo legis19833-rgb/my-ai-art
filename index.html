@@ -175,8 +175,8 @@
         img.style.opacity = '0.5';
 
         const seed = Math.floor(Math.random() * 999999);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true`;
-
+        const imageUrl = `https://flux1.ai/api/generate?prompt=${encodeURIComponent(prompt)}&width=1080&height=1080&seed=${seed}`;
+        
         const tempImg = new Image();
         tempImg.src = imageUrl;
 
