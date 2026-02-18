@@ -86,139 +86,139 @@
     </div>
 
     <script>
-        const gallery = document.getElementById('gallery');
+    const gallery = document.getElementById('gallery');
+    const MAX_GALLERY = 8;
+    const COOLDOWN_MS = 10000; // 10 секунд
 
-        let isGenerating = false;
-const COOLDOWN_MS = 10000; // 10 секунд
-let lastGeneratedTime = 0;
+    let isGenerating = false;
+    let lastGeneratedTime = 0;
 
-async function generateImage() {
-    const now = Date.now();
-    if (isGenerating) return;
-    if (now - lastGeneratedTime < COOLDOWN_MS) {
-        const secLeft = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
-        alert(`Подожди ещё ${secLeft} сек — серверу нужно отдохнуть 😅`);
-        return;
+    // ───────────────────────────────────────────────
+    // Загрузка галереи из localStorage при старте
+    // ───────────────────────────────────────────────
+    function loadGallery() {
+        const saved = localStorage.getItem('aiDreamArtGallery');
+        if (saved) {
+            const urls = JSON.parse(saved);
+            gallery.innerHTML = ''; // очищаем на всякий случай
+            urls.forEach(url => addToGallery(url, false)); // false = не сохранять заново
+        }
     }
 
-    const prompt = document.getElementById('promptInput').value.trim();
-    if (!prompt) {
-        alert('Напиши, что хочешь увидеть!');
-        return;
+    // ───────────────────────────────────────────────
+    // Добавление в галерею + сохранение в localStorage
+    // ───────────────────────────────────────────────
+    function addToGallery(url, save = true) {
+        const div = document.createElement('div');
+        div.className = 'gallery-item';
+        div.innerHTML = `
+            <img src="${url}" 
+                 class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all w-full aspect-square object-cover"
+                 onclick="window.open('${url}', '_blank')">
+        `;
+        gallery.prepend(div);
+
+        // Удаляем лишние элементы
+        while (gallery.children.length > MAX_GALLERY) {
+            gallery.lastChild.remove();
+        }
+
+        if (save) {
+            saveGallery();
+        }
     }
-    if (/[а-яА-ЯёЁ]{4,}/.test(prompt)) {
-        if (!confirm('Промпт на русском — результат может быть странным. Продолжить?')) {
+
+    function saveGallery() {
+        const urls = Array.from(gallery.querySelectorAll('img')).map(img => img.src);
+        localStorage.setItem('aiDreamArtGallery', JSON.stringify(urls));
+    }
+
+    // ───────────────────────────────────────────────
+    // Основная функция генерации
+    // ───────────────────────────────────────────────
+    async function generateImage() {
+        const now = Date.now();
+
+        if (isGenerating) return;
+
+        if (now - lastGeneratedTime < COOLDOWN_MS) {
+            const secLeft = Math.ceil((COOLDOWN_MS - (now - lastGeneratedTime)) / 1000);
+            alert(`Подожди ещё ${secLeft} сек — серверу нужно немного отдохнуть 🌙`);
             return;
         }
-    }
 
-    isGenerating = true;
-    lastGeneratedTime = now;
+        const promptInput = document.getElementById('promptInput');
+        const prompt = promptInput.value.trim();
 
-    const btn = document.getElementById('genBtn');
-    const img = document.getElementById('resultImage');
-    const loader = document.getElementById('loader');
-
-    btn.disabled = true;
-    btn.innerText = 'Генерирую...';
-    loader.style.display = 'block';
-    img.style.opacity = '0.5';
-
-    const seed = Math.floor(Math.random() * 999999);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true`;
-
-    const tempImg = new Image();
-    tempImg.src = imageUrl;
-
-    // Таймаут на случай зависания
-    const timeout = setTimeout(() => {
-        if (isGenerating) {
-            alert('Генерация заняла слишком много времени. Попробуй ещё раз.');
-            finishLoading();
+        if (!prompt) {
+            alert('Напиши, что хочешь увидеть!');
+            return;
         }
-    }, 30000);
 
-    tempImg.onload = () => {
-        clearTimeout(timeout);
-        if (img.src && !img.src.includes('unsplash')) {
-            addToGallery(img.src);
-        }
-        img.src = imageUrl;
-        img.style.opacity = '1';
-        finishLoading();
-    };
-
-    tempImg.onerror = () => {
-        clearTimeout(timeout);
-        alert('Не получилось загрузить картинку. Попробуй другой промпт.');
-        finishLoading();
-    };
-
-    function finishLoading() {
-        loader.style.display = 'none';
-        btn.disabled = false;
-        btn.innerText = 'Создать изображение';
-        isGenerating = false;
-    }
-}
-        
-        async function generateImage() {
-            const promptInput = document.getElementById('promptInput');
-            const btn = document.getElementById('genBtn');
-            const img = document.getElementById('resultImage');
-            const loader = document.getElementById('loader');
-
-            const prompt = promptInput.value.trim();
-
-            if (!prompt) {
-                alert('Пожалуйста, введите описание на английском!');
+        // Лёгкая подсказка про русский язык
+        if (/[а-яА-ЯёЁ]{3,}/.test(prompt)) {
+            if (!confirm('Промпт содержит русский текст — результат может быть хуже. Продолжить?')) {
                 return;
             }
-
-            // Блокируем кнопку и показываем загрузку
-            btn.disabled = true;
-            btn.innerText = 'Рисую шедевр...';
-            loader.style.display = 'block';
-            img.style.opacity = '0.5';
-
-            const seed = Math.floor(Math.random() * 999999);
-            // Используем прямой URL для генерации
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true`;
-
-            // Создаем временный объект изображения для предзагрузки
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
-
-            tempImg.onload = () => {
-                // Добавляем ПРЕДЫДУЩУЮ картинку в галерею
-                if (img.src && !img.src.includes('unsplash')) {
-                    addToGallery(img.src);
-                }
-
-                // Ставим новую картинку
-                img.src = imageUrl;
-                img.style.opacity = '1';
-                loader.style.display = 'none';
-                btn.disabled = false;
-                btn.innerText = 'Создать изображение';
-            };
-
-            tempImg.onerror = () => {
-                alert('Ошибка загрузки. Попробуйте еще раз или смените промт.');
-                loader.style.display = 'none';
-                btn.disabled = false;
-                btn.innerText = 'Повторить';
-            };
         }
 
-        function addToGallery(url) {
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.innerHTML = `<img src="${url}" class="rounded-lg shadow-lg cursor-pointer hover:opacity-80 transition-all" onclick="window.open('${url}', '_blank')">`;
-            gallery.prepend(div);
-            
-            if (gallery.children.length > 8) gallery.lastChild.remove();
+        isGenerating = true;
+        lastGeneratedTime = now;
+
+        const btn = document.getElementById('genBtn');
+        const img = document.getElementById('resultImage');
+        const loader = document.getElementById('loader');
+
+        btn.disabled = true;
+        btn.innerText = 'Генерирую шедевр...';
+        loader.style.display = 'block';
+        img.style.opacity = '0.5';
+
+        const seed = Math.floor(Math.random() * 999999);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1080&seed=${seed}&nologo=true`;
+
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
+
+        // Защита от вечного ожидания
+        const timeoutId = setTimeout(() => {
+            if (isGenerating) {
+                alert('Генерация слишком долго идёт. Попробуй ещё раз или другой промпт.');
+                finish();
+            }
+        }, 30000);
+
+        tempImg.onload = () => {
+            clearTimeout(timeoutId);
+
+            // Добавляем предыдущую картинку в галерею (если это не заглушка)
+            if (img.src && !img.src.includes('unsplash')) {
+                addToGallery(img.src);
+            }
+
+            img.src = imageUrl;
+            img.style.opacity = '1';
+            finish();
+        };
+
+        tempImg.onerror = () => {
+            clearTimeout(timeoutId);
+            alert('Не удалось загрузить изображение. Попробуй другой промпт.');
+            finish();
+        };
+
+        function finish() {
+            loader.style.display = 'none';
+            btn.disabled = false;
+            btn.innerText = 'Создать изображение';
+            isGenerating = false;
         }
-    </script>
+    }
+
+    // Инициализация при загрузке страницы
+    window.addEventListener('load', () => {
+        loadGallery();
+    });
+</script>
 </body>
 </html>
